@@ -7,4 +7,4 @@ UserAdmin.fieldsets += (
     ('Extra Fields', {'fields': ('bio',)}),
 )
 
-admin.site.register(CustomUser)
+admin.site.register(CustomUser, UserAdmin)
