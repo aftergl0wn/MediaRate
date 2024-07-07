@@ -48,7 +48,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     )
     bio = models.TextField('Биография', blank=True)
     is_staff = models.BooleanField('Суперпользователь', default=False)
-    is_active = models.BooleanField('Активен', default=False)
+    is_active = models.BooleanField('Активен', default=True)
     confirmation_code = models.IntegerField(
         'Код подтверждения',
         blank=True,

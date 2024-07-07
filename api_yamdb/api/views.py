@@ -37,7 +37,8 @@ class CustomTokenObtainPairView(APIView):
 
             return Response({'access': str(refresh.access_token)})
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
 
 
 class SignUpView(APIView):
@@ -45,30 +46,34 @@ class SignUpView(APIView):
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data.get('email')
-            username = serializer.validated_data.get('username')
+        username = request.data.get('username')
+        email = request.data.get('email')
 
-            user, created = User.objects.get_or_create(username=username)
-            confirmation_code = get_confirmation_code()
-
-            user.confirmation_code = confirmation_code
-            if created:
-                user.email = email
-                user.is_active = False
+        try:
+            # Если пользователь сущетсвует, то проверяем почту,
+            # затем обновляем код подтверждения
+            user = User.objects.get(username=username)
+            if user.email != email:
+                return Response({'error': 'Неверный email.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            user.confirmation_code = get_confirmation_code()
             user.save()
+            serializer = self.serializer_class(user)
+        except User.DoesNotExist:
+            # Если пользователя не существует, создаем нового
+            if serializer.is_valid():
+                user = serializer.save()
+            else:
+                return Response(serializer.errors,
+                                status=status.HTTP_400_BAD_REQUEST)
 
         # Отправка email с кодом подтверждения
-            subject = 'YaMDB: Подтверждение адреса электронной почты'
-            message = (f'''Ваш код подтверждения: {confirmation_code}.'
-                   Используйте этот код для активации вашего аккаунта.''')
-            from_email = settings.DEFAULT_FROM_EMAIL
-            recipient_list = [email]
+        subject = 'YaMDB: Подтверждение адреса электронной почты'
+        message = (f'''Ваш код подтверждения: {user.confirmation_code}.'
+                Используйте этот код для активации вашего аккаунта.''')
+        from_email = settings.DEFAULT_FROM_EMAIL
 
-            send_mail(subject, message, from_email, recipient_list,
-                      fail_silently=False)
+        send_mail(subject, message, from_email, (email,))
 
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
+        return Response({'username': serializer.data['username'],
+                         'email': serializer.data['email']})
