@@ -1,43 +1,15 @@
 from django.db import models
-from django.contrib.auth.models import (
-    AbstractBaseUser,
-    BaseUserManager,
-    PermissionsMixin)
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
+
+from .managers import CustomUserManager
 
 ROLE_CHOICES = (
     ('user', 'Пользователь'),
     ('moderator', 'Модератор'),
     ('admin', 'Администратор'),
 )
-
-
-class CustomUserManager(BaseUserManager):
-    def create_user(self, username, email, password, **extra_fields):
-        """
-        Create and save a User with the given email and password.
-        """
-        if not username:
-            raise ValueError('Задайте имя пользователя.')
-        if not email:
-            raise ValueError('Задайте email.')
-        email = self.normalize_email(email)
-        user = self.model(username=username, email=email, **extra_fields)
-        user.set_password(password)
-        user.save()
-        return user
-
-    def create_superuser(self, username, email, password, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_active', True)
-
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
-        return self.create_user(email, username, password, **extra_fields)
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
@@ -51,26 +23,22 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
                 message=('Имя пользователя может содержать только буквы,'
                          'цифры и символы @/./+/-/_.')
             )
-        ],
-        error_messages={
-            'unique': 'Пользователь с таким именем уже существует.'
-        }
+        ]
     )
     email = models.EmailField(
         'Адрес электронной почты',
         max_length=254,
         unique=True,
-        error_messages={
-            'unique': 'Пользователь с таким email уже существует.'
-        },
     )
     first_name = models.CharField(
         'Имя',
         max_length=150,
+        blank=True,
     )
     last_name = models.CharField(
         'Фамилия',
         max_length=150,
+        blank=True,
     )
     role = models.CharField(
         'Роль',
@@ -80,7 +48,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     )
     bio = models.TextField('Биография', blank=True)
     is_staff = models.BooleanField('Суперпользователь', default=False)
-    is_active = models.BooleanField('Активен')
+    is_active = models.BooleanField('Активен', default=False)
+    confirmation_code = models.IntegerField(
+        'Код подтверждения',
+        blank=True,
+        null=True,
+        default=None
+    )
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ('email',)
@@ -90,13 +64,19 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = 'пользователь'
         verbose_name_plural = 'Пользователи'
+        # constraints = [
+        #     models.UniqueConstraint(
+        #         fields=['username', 'email'],
+        #         name='unique_user_email'
+        #     )
+        # ]
 
     def clean(self):
-        if self.username == 'me':
+        if self.username.lower() == 'me':
             raise ValidationError('Использовать имя "me" запрещено.')
-        if self.role not in ROLE_CHOICES:
-            raise ValidationError('Неверная роль. Допустимые значения:'
-                                  'user, moderator, admin.')
+        # if self.role not in ROLE_CHOICES:
+        #     raise ValidationError('Неверная роль. Допустимые значения:'
+        #                           'user, moderator, admin.')
 
     def __str__(self):
         return self.username
