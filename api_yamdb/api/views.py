@@ -19,7 +19,7 @@ from .serializers import (
     TokenUserSerializer,
     SignUpUserSerializer,
 )
-from .permissions import IsAdmin, IsSuperuser
+from .permissions import IsAdminOrSuperuser
 
 User = get_user_model()
 
@@ -82,7 +82,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
     lookup_field = 'username'
-    permission_classes = [IsAdmin]
+    permission_classes = (IsAdminOrSuperuser,)
     http_method_names = ['get', 'post', 'patch', 'delete']
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     filterset_fields = ('username', 'email')
