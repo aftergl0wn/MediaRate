@@ -19,6 +19,9 @@ class TokenUserSerializer(serializers.ModelSerializer):
 
 
 class SignUpUserSerializer(serializers.ModelSerializer):
+    username = serializers.RegexField(
+        regex=r'^[\w.@+-]+\Z'
+    )
 
     class Meta:
         model = User
