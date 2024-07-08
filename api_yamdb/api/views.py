@@ -11,6 +11,7 @@ from django.contrib.auth.tokens import default_token_generator
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
+from rest_framework.exceptions import ValidationError
 
 from .utils import get_confirmation_code
 from .serializers import (
@@ -101,5 +102,8 @@ class UserViewSet(viewsets.ModelViewSet):
         )
         serializer.is_valid(raise_exception=True)
         if self.request.method == 'PATCH':
+            if 'role' in request.data:
+                raise ValidationError({'role': ('У вас нет прав'
+                                                'на изменение роли')})
             serializer.save()
         return JsonResponse(serializer.data)
