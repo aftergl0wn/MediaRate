@@ -9,6 +9,8 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework.decorators import action
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 
 from .utils import get_confirmation_code
 from .serializers import (
@@ -16,6 +18,7 @@ from .serializers import (
     TokenUserSerializer,
     SignUpUserSerializer,
 )
+from .permissions import IsAdmin, IsSuperuser
 
 User = get_user_model()
 
@@ -77,8 +80,12 @@ class SignUpView(APIView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
-    # permission_classes = ''
+    lookup_field = 'username'
+    permission_classes = [IsAdmin]
     http_method_names = ['get', 'post', 'patch', 'delete']
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filterset_fields = ('username', 'email')
+    search_fields = ('username', 'email')
 
     @action(
         methods=('get', 'patch',),
