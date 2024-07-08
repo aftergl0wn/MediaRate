@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 from django.contrib.auth import get_user_model
 
 from users.models import ROLE_CHOICES
@@ -13,7 +12,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name',
-                  'last_name', 'role', 'bio')
+                  'last_name', 'role', 'bio', 'confirmation_code')
         validators = []
 
     def validate_username(self, value):
