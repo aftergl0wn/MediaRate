@@ -10,7 +10,7 @@ app_name = 'api'
 
 urlpatterns = [
     path('v1/auth/token/',
-         views.CustomTokenObtainPairView.as_view(),
+         views.CustomTokenView.as_view(),
          name='token'
          ),
     path('v1/auth/signup/', views.SignUpView.as_view(), name='signup')

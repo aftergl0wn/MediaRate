@@ -18,7 +18,7 @@ from .serializers import (
 User = get_user_model()
 
 
-class CustomTokenObtainPairView(APIView):
+class CustomTokenView(APIView):
     serializer_class = TokenUserSerializer
 
     def post(self, request):

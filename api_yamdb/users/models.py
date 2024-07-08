@@ -52,7 +52,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField('Активен', default=True)
     confirmation_code = models.CharField(
         'Код подтверждения',
-        max_length=settings.CONFIRMATION_CODE_LENGTH,
+        max_length=settings.MAX_USER_LENGTH,
         blank=True,
         null=True,
         default=None
