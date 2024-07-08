@@ -9,5 +9,9 @@ app_name = 'api'
 # router.register('auth/token', CustomTokenObtainPairViewSet, basename='users')
 
 urlpatterns = [
-    path('v1/auth/', include('users.urls')),
+    path('v1/auth/token/',
+         views.CustomTokenObtainPairView.as_view(),
+         name='token'
+         ),
+    path('v1/auth/signup/', views.SignUpView.as_view(), name='signup')
 ]

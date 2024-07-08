@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
@@ -15,7 +16,7 @@ ROLE_CHOICES = (
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(
         'Имя пользователя',
-        max_length=150,
+        max_length=settings.MAX_USER_LENGTH,
         unique=True,
         validators=[
             RegexValidator(
@@ -27,17 +28,17 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     )
     email = models.EmailField(
         'Адрес электронной почты',
-        max_length=254,
+        max_length=settings.MAX_EMAIL_LENGTH,
         unique=True,
     )
     first_name = models.CharField(
         'Имя',
-        max_length=150,
+        max_length=settings.MAX_USER_LENGTH,
         blank=True,
     )
     last_name = models.CharField(
         'Фамилия',
-        max_length=150,
+        max_length=settings.MAX_USER_LENGTH,
         blank=True,
     )
     role = models.CharField(
@@ -49,8 +50,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     bio = models.TextField('Биография', blank=True)
     is_staff = models.BooleanField('Суперпользователь', default=False)
     is_active = models.BooleanField('Активен', default=True)
-    confirmation_code = models.IntegerField(
+    confirmation_code = models.CharField(
         'Код подтверждения',
+        max_length=settings.CONFIRMATION_CODE_LENGTH,
         blank=True,
         null=True,
         default=None
@@ -64,12 +66,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = 'пользователь'
         verbose_name_plural = 'Пользователи'
-        # constraints = [
-        #     models.UniqueConstraint(
-        #         fields=['username', 'email'],
-        #         name='unique_user_email'
-        #     )
-        # ]
 
     def clean(self):
         if self.username.lower() == 'me':

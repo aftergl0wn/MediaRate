@@ -128,13 +128,12 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    # Отключение refresh-токенов
-    # 'ROTATE_REFRESH_TOKENS': False,
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',)
 }
 
-# AUTHENTICATION_BACKENDS = [
-#     'users.backends.CustomUserBackend',
-# ]
-CONFIRMATION_CODE_LENGTH = 5
+CONFIRMATION_CODE_LENGTH = 6
+
+MAX_USER_LENGTH = 150
+
+MAX_EMAIL_LENGTH = 254
