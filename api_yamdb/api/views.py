@@ -2,11 +2,13 @@ from django.conf import settings
 from django.core.mail import send_mail
 from rest_framework.views import APIView
 from django.http import JsonResponse
-from rest_framework import status
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.tokens import default_token_generator
+from rest_framework.decorators import action
 
 from .utils import get_confirmation_code
 from .serializers import (
@@ -70,3 +72,27 @@ class SignUpView(APIView):
 
         return JsonResponse({'username': serializer.data['username'],
                              'email': serializer.data['email']})
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = CustomUserSerializer
+    # permission_classes = ''
+    http_method_names = ['get', 'post', 'patch', 'delete']
+
+    @action(
+        methods=('get', 'patch',),
+        detail=False,
+        url_path='me',
+        permission_classes=(IsAuthenticated,)
+    )
+    def me(self, request):
+        serializer = CustomUserSerializer(
+            request.user,
+            partial=True,
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
+        if self.request.method == 'PATCH':
+            serializer.save()
+        return JsonResponse(serializer.data)
