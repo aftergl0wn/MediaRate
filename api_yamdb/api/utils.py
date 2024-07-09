@@ -1,5 +1,7 @@
-from django.contrib.auth.tokens import default_token_generator
+import uuid
+from django.conf import settings
 
 
-def get_confirmation_code(user):
-    return default_token_generator.make_token(user)
+def get_confirmation_code():
+    return str(uuid.uuid4()
+               ).replace('-', '')[:settings.CONFIRMATION_CODE_LENGTH]

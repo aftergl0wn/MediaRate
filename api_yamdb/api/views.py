@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -35,7 +34,7 @@ class CustomTokenView(APIView):
             username=request.data.get('username')
         )
         confirmation_code = request.data.get('confirmation_code')
-        if not default_token_generator.check_token(user, confirmation_code):
+        if user.confirmation_code != confirmation_code:
             return JsonResponse({'confirmation_code': ('Неверный код'
                                                        'подтверждения')},
                                 status=status.HTTP_400_BAD_REQUEST)
@@ -63,13 +62,14 @@ class SignUpView(APIView):
             # Если пользователя не существует, создаем нового
             if serializer.is_valid():
                 user = serializer.save()
+                user.confirmation_code = get_confirmation_code()
+                user.save()
             else:
                 return JsonResponse(serializer.errors,
                                     status=status.HTTP_400_BAD_REQUEST)
-        confirmation_code = get_confirmation_code(user)
 
         send_mail(subject='YaMDB: Код подтверждения.',
-                  message=f'Ваш код подтверждения: {confirmation_code}.',
+                  message=f'Ваш код подтверждения: {user.confirmation_code}.',
                   from_email=settings.DEFAULT_FROM_EMAIL,
                   recipient_list=[email],
                   fail_silently=True
@@ -80,7 +80,7 @@ class SignUpView(APIView):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('username')
     serializer_class = CustomUserSerializer
     lookup_field = 'username'
     permission_classes = (IsAdminOrSuperuser,)

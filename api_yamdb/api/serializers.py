@@ -1,6 +1,6 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from rest_framework import serializers
-from rest_framework import status
+from rest_framework import serializers, status
 
 from users.models import ROLE_CHOICES
 
@@ -20,7 +20,8 @@ class TokenUserSerializer(serializers.ModelSerializer):
 
 class SignUpUserSerializer(serializers.ModelSerializer):
     username = serializers.RegexField(
-        regex=r'^[\w.@+-]+\Z'
+        regex=r'^[\w.@+-]+\Z',
+        max_length=settings.MAX_USER_LENGTH
     )
 
     class Meta:
