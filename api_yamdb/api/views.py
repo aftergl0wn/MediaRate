@@ -95,7 +95,7 @@ class UserViewSet(viewsets.ModelViewSet):
         url_path='me',
         permission_classes=(IsAuthenticated,)
     )
-    def get_me_enpoint(self, request):
+    def get_me_endpoint(self, request):
         serializer = CustomUserSerializer(
             request.user,
             partial=True,
