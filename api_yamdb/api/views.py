@@ -1,31 +1,31 @@
 from django.conf import settings
-from django.core.mail import send_mail
-from rest_framework.views import APIView
-from django.http import JsonResponse
-from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from django.contrib.auth.tokens import default_token_generator
-from rest_framework.decorators import action
+from django.core.mail import send_mail
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters
+from rest_framework import filters, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from .utils import get_confirmation_code
+from .permissions import IsAdminOrSuperuser
 from .serializers import (
     CustomUserSerializer,
     TokenUserSerializer,
     SignUpUserSerializer,
 )
-from .permissions import IsAdminOrSuperuser
+from .utils import get_confirmation_code
 
 User = get_user_model()
 
 
 class CustomTokenView(APIView):
     serializer_class = TokenUserSerializer
+    permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -45,6 +45,7 @@ class CustomTokenView(APIView):
 
 class SignUpView(APIView):
     serializer_class = SignUpUserSerializer
+    permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -83,7 +84,7 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = CustomUserSerializer
     lookup_field = 'username'
     permission_classes = (IsAdminOrSuperuser,)
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    http_method_names = ['get', 'delete', 'patch', 'post']
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     filterset_fields = ('username', 'email')
     search_fields = ('username', 'email')
@@ -94,7 +95,7 @@ class UserViewSet(viewsets.ModelViewSet):
         url_path='me',
         permission_classes=(IsAuthenticated,)
     )
-    def me(self, request):
+    def get_me_enpoint(self, request):
         serializer = CustomUserSerializer(
             request.user,
             partial=True,

@@ -70,9 +70,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def clean(self):
         if self.username.lower() == 'me':
             raise ValidationError('Использовать имя "me" запрещено.')
-        # if self.role not in ROLE_CHOICES:
-        #     raise ValidationError('Неверная роль. Допустимые значения:'
-        #                           'user, moderator, admin.')
 
     def __str__(self):
         return self.username
