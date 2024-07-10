@@ -7,8 +7,6 @@ class IsAdminOrSuperuser(permissions.BasePermission):
         # Пропускаем анонимных пользователей
         if not request.user.is_authenticated:
             return False
-
-        # Проверяем, является ли пользователь администратором
         return request.user.role == 'admin' or request.user.is_superuser
 
 class IsAdminOrReadOnlyPermission(permissions.BasePermission):
