@@ -8,17 +8,20 @@ from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from api.filters import TitlesFilters
-from reviews.models import Titles, Genres, Categories
-from .permissions import IsAdminOrSuperuser, IsAdminOrReadOnlyPermission
+from reviews.models import Categories, Comment, Genres, Review, Titles
+from .filters import TitlesFilters
+from .mixins import CreateListDestroyMixin, CustomUpdateMixin, RetrieveMixin
+from .permissions import IsAdminOrSuperuser, IsAdminOrReadOnlyPermission, IsOwnerOrReadOnly
 from .serializers import (
     CategoriesSerializer,
+    CommentSerializer,
     CustomUserSerializer,
     GenereSerializer,
+    ReviewSerializer,
     TitlesSerializer,
     TitlesGetSerializer,
     TokenUserSerializer,
@@ -27,6 +30,48 @@ from .serializers import (
 from .utils import get_confirmation_code
 
 User = get_user_model()
+
+
+class ReviewViewSet(CustomUpdateMixin,
+                    CreateListDestroyMixin,
+                    RetrieveMixin):
+    """Создание, изменение и удаление отзывов"""
+
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('text', 'author', 'score')
+    permission_classes = (IsAuthenticatedOrReadOnly,
+                          IsOwnerOrReadOnly,)
+
+    def get_queryset(self):
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        return title.reviews_title.all()
+
+    def perform_create(self, serializer):
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        serializer.save(author=self.request.user, title=title)
+
+
+class CommentViewSet(CustomUpdateMixin,
+                     CreateListDestroyMixin,
+                     RetrieveMixin):
+    """Создание, изменение и удаление комментариев"""
+
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('text', 'author',)
+    permission_classes = (IsAuthenticatedOrReadOnly,
+                          IsOwnerOrReadOnly,)
+
+    def get_queryset(self):
+        review = get_object_or_404(Review, id=self.kwargs['review_id'])
+        return review.comments.all()
+
+    def perform_create(self, serializer):
+        review = get_object_or_404(Review, id=self.kwargs['review_id'])
+        serializer.save(author=self.request.user, review=review)
 
 
 class CustomTokenView(APIView):
@@ -118,7 +163,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class TitelsViewSet(viewsets.ModelViewSet):
-    queryset = Titles.objects.all().order_by('id')
+    queryset = Titles.objects.annotate(rating=Avg('reviews__score')).all().order_by('id')
     permission_classes = (IsAdminOrReadOnlyPermission, )
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitlesFilters
@@ -147,5 +192,6 @@ class CategoriesViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     filterset_fields = ('name', )
-    search_fields = ('name',)
+    search_fields = ('name',)ango.conf import settings
+
 

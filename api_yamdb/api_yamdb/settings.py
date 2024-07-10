@@ -1,8 +1,7 @@
 import os
 from datetime import timedelta
-from pathlib import Path
-
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
 
@@ -114,6 +113,7 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
+
 AUTH_USER_MODEL = 'users.CustomUser'
 
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
@@ -129,6 +129,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+  
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
