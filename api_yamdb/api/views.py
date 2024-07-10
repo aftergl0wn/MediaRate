@@ -1,16 +1,17 @@
-from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from django_filters.rest_framework import DjangoFilterBackend
+
 
 from reviews.models import Category, Comment, Genre, Review, Title
 
 
 from .mixins import CreateListDestroyMixin, CustomUpdateMixin, RetrieveMixin
-from .permissions import IsOwnerOrReadOnly
 from .serializers import (CommentSerializer,
                           ReviewSerializer,
                           )
+from .permissions import IsOwnerOrReadOnly
 
 User = get_user_model()
 
