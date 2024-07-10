@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -8,14 +9,22 @@ from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly
+)
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Categories, Comment, Genres, Review, Titles
 from .filters import TitlesFilters
 from .mixins import CreateListDestroyMixin, CustomUpdateMixin, RetrieveMixin
-from .permissions import IsAdminOrSuperuser, IsAdminOrReadOnlyPermission, IsOwnerOrReadOnly
+from .permissions import (
+    IsAdminOrSuperuser,
+    IsAdminOrReadOnlyPermission,
+    IsOwnerOrReadOnly
+)
 from .serializers import (
     CategoriesSerializer,
     CommentSerializer,
@@ -45,11 +54,11 @@ class ReviewViewSet(CustomUpdateMixin,
                           IsOwnerOrReadOnly,)
 
     def get_queryset(self):
-        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        title = get_object_or_404(Titles, id=self.kwargs.get('title_id'))
         return title.reviews_title.all()
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        title = get_object_or_404(Titles, id=self.kwargs.get('title_id'))
         serializer.save(author=self.request.user, title=title)
 
 
@@ -163,8 +172,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class TitelsViewSet(viewsets.ModelViewSet):
-    queryset = Titles.objects.annotate(rating=Avg('reviews__score')).all().order_by('id')
-    permission_classes = (IsAdminOrReadOnlyPermission, )
+    queryset = Titles.objects.annotate(rating=Avg('reviews_title__score')
+                                       ).all().order_by('id')
+    permission_classes = (IsAdminOrReadOnlyPermission,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitlesFilters
     pagination_class = PageNumberPagination
@@ -192,6 +202,4 @@ class CategoriesViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     filterset_fields = ('name', )
-    search_fields = ('name',)ango.conf import settings
-
-
+    search_fields = ('name',)

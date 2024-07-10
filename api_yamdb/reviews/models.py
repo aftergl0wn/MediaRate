@@ -23,12 +23,13 @@ class Titles(models.Model):
     category = models.ForeignKey(Categories,
                                  on_delete=models.SET_NULL, null=True)
 
+
 class Review(models.Model):
     """Модель - отзыв к произведению"""
 
     text = models.TextField('Текст отзыва')
     title = models.ForeignKey(
-        Title,
+        Titles,
         on_delete=models.CASCADE,
         related_name='reviews_title',
         verbose_name='Произведение',
