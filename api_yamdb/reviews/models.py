@@ -5,20 +5,23 @@ from django.db import models
 User = get_user_model()
 
 
-class Category(models.Model):
-    """Модель - категорий"""
-    pass
+class Genres(models.Model):
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(max_length=50, unique=True)
 
 
-class Genre(models.Model):
-    """Модель - жанров"""
-    pass
+class Categories(models.Model):
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(max_length=50, unique=True)
 
 
-class Title(models.Model):
-    """Модель - произведений"""
-    pass
-
+class Titles(models.Model):
+    name = models.CharField(max_length=256)
+    year = models.IntegerField()
+    description = models.TextField()
+    genre = models.ManyToManyField(Genres)
+    category = models.ForeignKey(Categories,
+                                 on_delete=models.SET_NULL, null=True)
 
 class Review(models.Model):
     """Модель - отзыв к произведению"""
