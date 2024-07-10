@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status
 from rest_framework.relations import SlugRelatedField
 
-from reviews.models import Titles, Genres, Categories, Comment, Review
+from reviews.models import Title, Genres, Categories, Comment, Review
 from users.models import ROLE_CHOICES
 
 
@@ -28,7 +28,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         title_id = self.context.get('view').kwargs.get('title_id')
-        title = get_object_or_404(Titles, pk=title_id)
+        title = get_object_or_404(Title, pk=title_id)
         author = self.context.get('request').user
         if self.context.get('request').method == 'POST':
             if Review.objects.filter(author=author, title=title).exists():
@@ -125,7 +125,7 @@ class TitlesGetSerializer(serializers.ModelSerializer):
     category = CategoriesSerializer(read_only=True)
 
     class Meta:
-        model = Titles
+        model = Title
         fields = ('id', 'name', 'year', 'description', 'genre', 'category')
 
 
@@ -137,7 +137,7 @@ class TitlesSerializer(serializers.ModelSerializer):
                                             queryset=Categories.objects.all())
 
     class Meta:
-        model = Titles
+        model = Title
         fields = '__all__'
 
     def validate_year(self, value):

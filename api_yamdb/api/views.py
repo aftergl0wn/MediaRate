@@ -17,7 +17,7 @@ from rest_framework.permissions import (
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import Categories, Comment, Genres, Review, Titles
+from reviews.models import Categories, Comment, Genres, Review, Title
 from .filters import TitlesFilters
 from .mixins import CreateListDestroyMixin, CustomUpdateMixin, RetrieveMixin
 from .permissions import (
@@ -54,11 +54,11 @@ class ReviewViewSet(CustomUpdateMixin,
                           IsOwnerOrReadOnly,)
 
     def get_queryset(self):
-        title = get_object_or_404(Titles, id=self.kwargs.get('title_id'))
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
         return title.reviews_title.all()
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Titles, id=self.kwargs.get('title_id'))
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
         serializer.save(author=self.request.user, title=title)
 
 
@@ -172,8 +172,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class TitelsViewSet(viewsets.ModelViewSet):
-    queryset = Titles.objects.annotate(rating=Avg('reviews_title__score')
-                                       ).all().order_by('id')
+    queryset = Title.objects.annotate(rating=Avg('reviews_title__score')
+                                      ).all().order_by('id')
     permission_classes = (IsAdminOrReadOnlyPermission,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitlesFilters

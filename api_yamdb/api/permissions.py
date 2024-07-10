@@ -16,7 +16,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         return (
             request.method in permissions.SAFE_METHODS
         )
- 
+
 
 class IsAdminOrSuperuser(permissions.BasePermission):
 

@@ -15,7 +15,7 @@ class Categories(models.Model):
     slug = models.SlugField(max_length=50, unique=True)
 
 
-class Titles(models.Model):
+class Title(models.Model):
     name = models.CharField(max_length=256)
     year = models.IntegerField()
     description = models.TextField()
@@ -29,7 +29,7 @@ class Review(models.Model):
 
     text = models.TextField('Текст отзыва')
     title = models.ForeignKey(
-        Titles,
+        Title,
         on_delete=models.CASCADE,
         related_name='reviews_title',
         verbose_name='Произведение',
