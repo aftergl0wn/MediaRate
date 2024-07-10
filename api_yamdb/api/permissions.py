@@ -9,6 +9,7 @@ class IsAdminOrSuperuser(permissions.BasePermission):
             return False
         return request.user.role == 'admin' or request.user.is_superuser
 
+
 class IsAdminOrReadOnlyPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         return (request.method in permissions.SAFE_METHODS
