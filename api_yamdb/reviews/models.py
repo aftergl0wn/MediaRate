@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -6,22 +7,49 @@ User = get_user_model()
 
 
 class Genres(models.Model):
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50, unique=True)
+    name = models.CharField('Название', max_length=settings.MAX_NAME_LENGTH)
+    slug = models.SlugField('Идентификатор',
+                            max_length=settings.MAX_SLUG_LENGTH,
+                            unique=True
+                            )
+
+    class Meta:
+        verbose_name = 'жанр'
+        verbose_name_plural = 'Жанры'
+
+    def __str__(self):
+        return self.name
 
 
 class Categories(models.Model):
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50, unique=True)
+    name = models.CharField('Название', max_length=settings.MAX_NAME_LENGTH)
+    slug = models.SlugField('Идентификатор',
+                            max_length=settings.MAX_SLUG_LENGTH,
+                            unique=True
+                            )
+
+    class Meta:
+        verbose_name = 'категория'
+        verbose_name_plural = 'Категории'
+
+    def __str__(self):
+        return self.name
 
 
 class Title(models.Model):
-    name = models.CharField(max_length=256)
-    year = models.IntegerField()
-    description = models.TextField()
-    genre = models.ManyToManyField(Genres)
-    category = models.ForeignKey(Categories,
+    name = models.CharField('Название', max_length=settings.MAX_NAME_LENGTH)
+    year = models.IntegerField('Год выпуска')
+    description = models.TextField('Описание')
+    genre = models.ManyToManyField(Genres, verbose_name='Жанры')
+    category = models.ForeignKey(Categories, verbose_name='Категория',
                                  on_delete=models.SET_NULL, null=True)
+
+    class Meta:
+        verbose_name = 'произведние'
+        verbose_name_plural = 'Произведения'
+
+    def __str__(self):
+        return self.name
 
 
 class Review(models.Model):
@@ -67,7 +95,7 @@ class Review(models.Model):
         verbose_name_plural = 'Отзывы'
 
     def __str__(self):
-        return self.text[:50]
+        return f'{self.author} - {self.title}- {self.text[:20]}'
 
 
 class Comment(models.Model):
@@ -98,4 +126,4 @@ class Comment(models.Model):
         verbose_name_plural = 'Комментарии'
 
     def __str__(self):
-        return self.text[:30]
+        return f'{self.author} - {self.review}- {self.text[:20]}'
