@@ -14,6 +14,7 @@ from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly
 )
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -179,6 +180,7 @@ class TitelsViewSet(viewsets.ModelViewSet):
     filterset_class = TitlesFilters
     pagination_class = PageNumberPagination
     serializer_class = TitlesSerializer
+    http_method_names = ['get', 'delete', 'patch', 'post']
 
     def get_serializer_class(self):
         if self.action == 'retrieve' or self.action == 'list':
@@ -186,14 +188,17 @@ class TitelsViewSet(viewsets.ModelViewSet):
         return TitlesSerializer
 
 
-class GenresViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
-                    mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class GenresViewSet(CreateListDestroyMixin):
     queryset = Genres.objects.all().order_by('id')
     serializer_class = GenereSerializer
     permission_classes = (IsAdminOrReadOnlyPermission, )
     pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+    lookup_field = 'slug'
+
+    def retrieve(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class CategoriesViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
@@ -205,3 +210,7 @@ class CategoriesViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     filterset_fields = ('name', )
     search_fields = ('name',)
+    lookup_field = 'slug'
+
+    def retrieve(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
