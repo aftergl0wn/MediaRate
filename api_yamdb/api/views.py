@@ -192,6 +192,8 @@ class GenresViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     serializer_class = GenereSerializer
     permission_classes = (IsAdminOrReadOnlyPermission, )
     pagination_class = PageNumberPagination
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
 
 
 class CategoriesViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
