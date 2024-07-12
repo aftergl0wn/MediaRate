@@ -65,7 +65,12 @@ class TokenUserSerializer(serializers.ModelSerializer):
 class SignUpUserSerializer(serializers.ModelSerializer):
     username = serializers.RegexField(
         regex=r'^[\w.@+-]+\Z',
-        max_length=settings.MAX_USER_LENGTH
+        max_length=settings.MAX_USER_LENGTH,
+        validators=[]
+    )
+    email = serializers.EmailField(
+        max_length=settings.MAX_EMAIL_LENGTH,
+        validators=[]
     )
 
     class Meta:
@@ -76,11 +81,18 @@ class SignUpUserSerializer(serializers.ModelSerializer):
         username = data.get('username')
         email = data.get('email')
 
-        if User.objects.filter(username=username).exists():
-            user = User.objects.get(username=username)
+        user = User.objects.filter(username=username).first()
+        if user is not None:
             if user.email != email:
                 raise serializers.ValidationError(
-                    {'email': 'Неверный email'},
+                    {'error': 'Email пользователя указан неверно.'},
+                    status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.filter(email=email).first()
+        if user is not None:
+            if user.username != username:
+                raise serializers.ValidationError(
+                    {'error': 'Пользователь с таким email уже существует.'},
                     status.HTTP_400_BAD_REQUEST)
         return data
 

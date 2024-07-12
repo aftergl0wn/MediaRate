@@ -109,28 +109,15 @@ class SignUpView(APIView):
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
-        # serializer.is_valid(raise_exception=True)
-        # username = serializer.validated_data['username']
-        # email = serializer.validated_data['email']
-        username = request.data.get('username')
-        email = request.data.get('email')
-
-        try:
-            # Если пользователь существует, то проверяем почту
-            user = User.objects.get(username=username)
-            if user.email != email:
-                return JsonResponse({'error': 'Неверный email.'},
-                                    status=status.HTTP_400_BAD_REQUEST)
-            serializer = self.serializer_class(user)
-        except User.DoesNotExist:
-            # Если пользователя не существует, создаем нового
-            if serializer.is_valid(raise_exception=True):
-                user = serializer.save()
-                user.confirmation_code = get_confirmation_code()
-                user.save()
-            else:
-                return JsonResponse(serializer.errors,
-                                    status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data['username']
+        email = serializer.validated_data['email']
+        user, created = User.objects.get_or_create(
+            username=username,
+            email=email
+        )
+        user.confirmation_code = get_confirmation_code()
+        user.save()
 
         send_mail(subject='YaMDB: Код подтверждения.',
                   message=f'Ваш код подтверждения: {user.confirmation_code}.',
