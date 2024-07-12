@@ -7,7 +7,6 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (
     AllowAny,
@@ -122,7 +121,7 @@ class SignUpView(APIView):
             serializer = self.serializer_class(user)
         except User.DoesNotExist:
             # Если пользователя не существует, создаем нового
-            if serializer.is_valid():
+            if serializer.is_valid(raise_exception=True):
                 user = serializer.save()
                 user.confirmation_code = get_confirmation_code()
                 user.save()
@@ -161,14 +160,11 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = CustomUserSerializer(
             request.user,
             partial=True,
-            data=request.data
+            data=request.data,
+            context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
-        if self.request.method == 'PATCH':
-            if 'role' in request.data:
-                raise ValidationError({'role': ('У вас нет прав'
-                                                'на изменение роли')})
-            serializer.save()
+        serializer.save()
         return JsonResponse(serializer.data)
 
 

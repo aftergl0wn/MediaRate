@@ -7,7 +7,6 @@ from rest_framework import serializers, status
 from rest_framework.relations import SlugRelatedField
 
 from reviews.models import Title, Genres, Categories, Comment, Review
-from users.models import ROLE_CHOICES
 
 
 User = get_user_model()
@@ -100,12 +99,19 @@ class SignUpUserSerializer(serializers.ModelSerializer):
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
-    role = serializers.ChoiceField(choices=ROLE_CHOICES, required=False)
 
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name',
                   'last_name', 'role', 'bio')
+
+    def validate(self, data):
+        if (self.context.get('request').method == 'PATCH'
+            and 'role' in data
+                and not self.context.get('request').user.is_admin):
+            raise serializers.ValidationError(
+                {'role': 'У вас нет прав на изменение роли'})
+        return data
 
 
 class GenereSerializer(serializers.ModelSerializer):

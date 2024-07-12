@@ -6,14 +6,14 @@ from django.db import models
 
 from .managers import CustomUserManager
 
-ROLE_CHOICES = (
-    ('user', 'Пользователь'),
-    ('moderator', 'Модератор'),
-    ('admin', 'Администратор'),
-)
-
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
+
+    class RoleChoices(models.TextChoices):
+        USER = 'user', 'Пользователь'
+        MODERATOR = 'moderator', 'Модератор'
+        ADMIN = 'admin', 'Администратор'
+
     username = models.CharField(
         'Имя пользователя',
         max_length=settings.MAX_USER_LENGTH,
@@ -44,8 +44,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     role = models.CharField(
         'Роль',
         max_length=20,
-        choices=ROLE_CHOICES,
-        default='user',
+        choices=RoleChoices.choices,
+        default=RoleChoices.USER,
     )
     bio = models.TextField('Биография', blank=True)
     is_staff = models.BooleanField('Суперпользователь', default=False)
@@ -66,6 +66,14 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = 'пользователь'
         verbose_name_plural = 'Пользователи'
+
+    @property
+    def is_moderator(self):
+        return self.role == self.RoleChoices.MODERATOR
+
+    @property
+    def is_admin(self):
+        return self.role == self.RoleChoices.ADMIN
 
     def clean(self):
         if self.username.lower() == 'me':
