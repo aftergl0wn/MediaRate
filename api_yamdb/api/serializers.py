@@ -82,13 +82,6 @@ class SignUpUserSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {'email': 'Неверный email'},
                     status.HTTP_400_BAD_REQUEST)
-
-        if User.objects.filter(email=email).exists():
-            user = User.objects.get(username=username)
-            if user.username != username:
-                raise serializers.ValidationError(
-                    {'username': 'Имя пользователя уже существует'},
-                    status.HTTP_400_BAD_REQUEST)
         return data
 
     def validate_username(self, value):
