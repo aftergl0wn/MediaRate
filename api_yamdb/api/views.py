@@ -7,7 +7,6 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (
     AllowAny,
@@ -93,9 +92,9 @@ class CustomTokenView(APIView):
         serializer.is_valid(raise_exception=True)
         user = get_object_or_404(
             User,
-            username=request.data.get('username')
+            username=serializer.validated_data['username']
         )
-        confirmation_code = request.data.get('confirmation_code')
+        confirmation_code = serializer.validated_data['confirmation_code']
         if user.confirmation_code != confirmation_code:
             return JsonResponse({'confirmation_code': ('Неверный код'
                                                        'подтверждения')},
@@ -110,25 +109,15 @@ class SignUpView(APIView):
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
-        username = request.data.get('username')
-        email = request.data.get('email')
-
-        try:
-            # Если пользователь существует, то проверяем почту
-            user = User.objects.get(username=username)
-            if user.email != email:
-                return JsonResponse({'error': 'Неверный email.'},
-                                    status=status.HTTP_400_BAD_REQUEST)
-            serializer = self.serializer_class(user)
-        except User.DoesNotExist:
-            # Если пользователя не существует, создаем нового
-            if serializer.is_valid():
-                user = serializer.save()
-                user.confirmation_code = get_confirmation_code()
-                user.save()
-            else:
-                return JsonResponse(serializer.errors,
-                                    status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data['username']
+        email = serializer.validated_data['email']
+        user, created = User.objects.get_or_create(
+            username=username,
+            email=email
+        )
+        user.confirmation_code = get_confirmation_code()
+        user.save()
 
         send_mail(subject='YaMDB: Код подтверждения.',
                   message=f'Ваш код подтверждения: {user.confirmation_code}.',
@@ -161,14 +150,11 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = CustomUserSerializer(
             request.user,
             partial=True,
-            data=request.data
+            data=request.data,
+            context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
-        if self.request.method == 'PATCH':
-            if 'role' in request.data:
-                raise ValidationError({'role': ('У вас нет прав'
-                                                'на изменение роли')})
-            serializer.save()
+        serializer.save()
         return JsonResponse(serializer.data)
 
 

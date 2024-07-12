@@ -7,7 +7,6 @@ from rest_framework import serializers, status
 from rest_framework.relations import SlugRelatedField
 
 from reviews.models import Title, Genres, Categories, Comment, Review
-from users.models import ROLE_CHOICES
 
 
 User = get_user_model()
@@ -66,7 +65,12 @@ class TokenUserSerializer(serializers.ModelSerializer):
 class SignUpUserSerializer(serializers.ModelSerializer):
     username = serializers.RegexField(
         regex=r'^[\w.@+-]+\Z',
-        max_length=settings.MAX_USER_LENGTH
+        max_length=settings.MAX_USER_LENGTH,
+        validators=[]
+    )
+    email = serializers.EmailField(
+        max_length=settings.MAX_EMAIL_LENGTH,
+        validators=[]
     )
 
     class Meta:
@@ -77,18 +81,18 @@ class SignUpUserSerializer(serializers.ModelSerializer):
         username = data.get('username')
         email = data.get('email')
 
-        if User.objects.filter(username=username).exists():
-            user = User.objects.get(username=username)
+        user = User.objects.filter(username=username).first()
+        if user is not None:
             if user.email != email:
                 raise serializers.ValidationError(
-                    {'email': 'Неверный email'},
+                    {'error': 'Email пользователя указан неверно.'},
                     status.HTTP_400_BAD_REQUEST)
 
-        if User.objects.filter(email=email).exists():
-            user = User.objects.get(username=username)
+        user = User.objects.filter(email=email).first()
+        if user is not None:
             if user.username != username:
                 raise serializers.ValidationError(
-                    {'username': 'Имя пользователя уже существует'},
+                    {'error': 'Пользователь с таким email уже существует.'},
                     status.HTTP_400_BAD_REQUEST)
         return data
 
@@ -100,12 +104,19 @@ class SignUpUserSerializer(serializers.ModelSerializer):
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
-    role = serializers.ChoiceField(choices=ROLE_CHOICES, required=False)
 
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name',
                   'last_name', 'role', 'bio')
+
+    def validate(self, data):
+        if (self.context.get('request').method == 'PATCH'
+            and 'role' in data
+                and not self.context.get('request').user.is_admin):
+            raise serializers.ValidationError(
+                {'role': 'У вас нет прав на изменение роли'})
+        return data
 
 
 class GenereSerializer(serializers.ModelSerializer):
