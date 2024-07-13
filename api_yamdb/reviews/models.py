@@ -3,46 +3,34 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from .abstract_models import GenreCategory
+from .validators import year_validator
+
 User = get_user_model()
 
 
-class Genres(models.Model):
-    name = models.CharField('Название', max_length=settings.MAX_NAME_LENGTH)
-    slug = models.SlugField('Идентификатор',
-                            max_length=settings.MAX_SLUG_LENGTH,
-                            unique=True
-                            )
+class Genre(GenreCategory):
 
     class Meta:
         verbose_name = 'жанр'
         verbose_name_plural = 'Жанры'
 
-    def __str__(self):
-        return self.name
 
-
-class Categories(models.Model):
-    name = models.CharField('Название', max_length=settings.MAX_NAME_LENGTH)
-    slug = models.SlugField('Идентификатор',
-                            max_length=settings.MAX_SLUG_LENGTH,
-                            unique=True
-                            )
+class Category(GenreCategory):
 
     class Meta:
         verbose_name = 'категория'
         verbose_name_plural = 'Категории'
 
-    def __str__(self):
-        return self.name
-
 
 class Title(models.Model):
     name = models.CharField('Название', max_length=settings.MAX_NAME_LENGTH)
-    year = models.IntegerField('Год выпуска')
+    year = models.IntegerField(validators=[year_validator],
+                               verbose_name='Год выпуска')
     description = models.TextField('Описание')
-    genre = models.ManyToManyField(Genres, through='GenreTitle',
+    genre = models.ManyToManyField(Genre, through='GenreTitle',
                                    verbose_name='Жанры')
-    category = models.ForeignKey(Categories, verbose_name='Категория',
+    category = models.ForeignKey(Category, verbose_name='Категория',
                                  on_delete=models.SET_NULL, null=True)
 
     class Meta:
@@ -54,7 +42,7 @@ class Title(models.Model):
 
 
 class GenreTitle(models.Model):
-    genre = models.ForeignKey(Genres,
+    genre = models.ForeignKey(Genre,
                               verbose_name='Жанры',
                               on_delete=models.SET_NULL, null=True)
     title = models.ForeignKey(Title,
@@ -62,6 +50,12 @@ class GenreTitle(models.Model):
                               on_delete=models.SET_NULL, null=True)
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['genre', 'title'],
+                name='unique_genre_title'
+            )
+        ]
         verbose_name = 'произведние-категория'
         verbose_name_plural = 'Произведения-категории'
 
