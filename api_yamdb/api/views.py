@@ -5,7 +5,7 @@ from django.db.models import Avg
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, status, viewsets
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (
@@ -13,26 +13,30 @@ from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly
 )
-from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import Categories, Comment, Genres, Review, Title
+from reviews.models import Category, Comment, Genre, Review, Title
 from .filters import TitlesFilters
-from .mixins import CreateListDestroyMixin, CustomUpdateMixin, RetrieveMixin
+from .mixins import (
+    CategoryGenreMixin,
+    CreateListDestroyMixin,
+    CustomUpdateMixin,
+    RetrieveMixin
+)
 from .permissions import (
     IsAdminOrSuperuser,
     IsAdminOrReadOnlyPermission,
     IsOwnerOrReadOnly
 )
 from .serializers import (
-    CategoriesSerializer,
+    CategorySerializer,
     CommentSerializer,
     CustomUserSerializer,
     GenereSerializer,
     ReviewSerializer,
-    TitlesSerializer,
-    TitlesGetSerializer,
+    TitleSerializer,
+    TitleGetSerializer,
     TokenUserSerializer,
     SignUpUserSerializer,
 )
@@ -165,38 +169,22 @@ class TitelsViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitlesFilters
     pagination_class = PageNumberPagination
-    serializer_class = TitlesSerializer
+    serializer_class = TitleSerializer
     http_method_names = ['get', 'delete', 'patch', 'post']
 
     def get_serializer_class(self):
         if self.action == 'retrieve' or self.action == 'list':
-            return TitlesGetSerializer
-        return TitlesSerializer
+            return TitleGetSerializer
+        return TitleSerializer
 
 
-class GenresViewSet(CreateListDestroyMixin):
-    queryset = Genres.objects.all().order_by('id')
+class GenreViewSet(CategoryGenreMixin):
+    queryset = Genre.objects.all().order_by('id')
     serializer_class = GenereSerializer
-    permission_classes = (IsAdminOrReadOnlyPermission, )
-    pagination_class = PageNumberPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-
-    def retrieve(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-class CategoriesViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
-                        mixins.DestroyModelMixin, viewsets.GenericViewSet):
-    queryset = Categories.objects.all().order_by('id')
-    serializer_class = CategoriesSerializer
-    permission_classes = (IsAdminOrReadOnlyPermission, )
-    pagination_class = PageNumberPagination
+class CategoryViewSet(CategoryGenreMixin):
+    queryset = Category.objects.all().order_by('id')
+    serializer_class = CategorySerializer
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     filterset_fields = ('name', )
-    search_fields = ('name',)
-    lookup_field = 'slug'
-
-    def retrieve(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
