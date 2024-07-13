@@ -29,11 +29,10 @@ class ReviewSerializer(serializers.ModelSerializer):
         title_id = self.context.get('view').kwargs.get('title_id')
         title = get_object_or_404(Title, pk=title_id)
         author = self.context.get('request').user
-        if self.context.get('request').method == 'POST':
-            if Review.objects.filter(author=author, title=title).exists():
-                raise serializers.ValidationError(
-                    f'Вы уже оценили произведение: {title}!')
-            return data
+        if (self.context.get('request').method == 'POST'
+           and Review.objects.filter(author=author, title=title).exists()):
+            raise serializers.ValidationError(
+                f'Вы уже оценили произведение: {title}!')
         return data
 
 
