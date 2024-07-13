@@ -1,12 +1,11 @@
-import datetime as dt
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import serializers, status
 from rest_framework.relations import SlugRelatedField
 
-from reviews.models import Title, Genres, Categories, Comment, Review
+from reviews.models import Title, Genre, Category, Comment, Review
 
 
 User = get_user_model()
@@ -119,19 +118,19 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 class GenereSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Genres
-        fields = ('name', 'slug',)
+        model = Genre
+        exclude = ('id',)
 
 
-class CategoriesSerializer(serializers.ModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Categories
-        fields = ('name', 'slug',)
+        model = Category
+        exclude = ('id',)
 
 
-class TitlesGetSerializer(serializers.ModelSerializer):
+class TitleGetSerializer(serializers.ModelSerializer):
     genre = GenereSerializer(many=True, read_only=True)
-    category = CategoriesSerializer(read_only=True)
+    category = CategorySerializer(read_only=True)
     rating = serializers.IntegerField()
 
     class Meta:
@@ -145,24 +144,18 @@ class TitlesGetSerializer(serializers.ModelSerializer):
                   'category')
 
 
-class TitlesSerializer(serializers.ModelSerializer):
+class TitleSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(slug_field='slug',
-                                         queryset=Genres.objects.all(),
+                                         queryset=Genre.objects.all(),
                                          many=True)
     category = serializers.SlugRelatedField(slug_field='slug',
-                                            queryset=Categories.objects.all())
+                                            queryset=Category.objects.all())
 
     class Meta:
         model = Title
         fields = '__all__'
 
     def validate_year(self, value):
-        year = dt.date.today().year
-        if value > year:
+        if value < 1900 or value > timezone.now().year:
             raise serializers.ValidationError('Проверьте год!')
-        return value
-
-    def validate_rating(self, value):
-        if value == 0:
-            return None
         return value
