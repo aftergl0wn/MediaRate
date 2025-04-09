@@ -1,6 +1,6 @@
 # Проект YAMDB
 Авторы: Похлебкина Елизавета, Воробьев Василий, Анастасия Давыдова  
-Проект YaMDb собирает отзывы пользователей на произведения.  
+Проект MediaRate собирает отзывы пользователей на произведения.  
 Произведения делятся на категории. Пользователи могут ставить оценки произведениям и оставлять  
 свои комментарии к чужим отзывам. 
 
@@ -9,11 +9,11 @@
 Клонировать репозиторий и перейти в него в командной строке:
 
 ```
-git clone https://github.com/aftergl0wn/api_yamdb.git
+git clone https://github.com/aftergl0wn/MediaRate.git
 ```
 
 ```
-cd api_yamdb
+cd MediaRate
 ```
 
 Cоздать и активировать виртуальное окружение:
@@ -88,7 +88,7 @@ POST ...api/v1/categories/
 Пример импорта category.csv: 
 
 ```
-python3 manage.py import_data_category D:/Dev/api_yamdb/api_yamdb/static/data/category.csv
+python3 manage.py import_data_category D:/Dev/MediaRate/MediaRate/static/data/category.csv
 ```
 При удачном выполнение вывод в терминале будет: 
 
